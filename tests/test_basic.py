@@ -1,6 +1,5 @@
 from . import IpynbTest, RmdTest
 
-
 rmd_basic = """markdown-0-0
 markdown-0-1
 

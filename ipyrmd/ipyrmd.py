@@ -17,6 +17,7 @@ TODO:
 import nbformat
 import yaml
 import re
+import locale
 
 # cell.source can be either "source" or ["source", "source"]
 # notebook does not insert implicit newlines in the list case
@@ -26,6 +27,7 @@ maybe_join = lambda x: x if isinstance(x, str) else "".join(x)
 # a leading or trailing one
 maybe_newline = lambda x, y: x + y if x.endswith("\n") or y.startswith("\n") else x + "\n" + y
 
+default_encoding = 'UTF8'
 
 def join_with_emptylines(text):
     """
@@ -46,7 +48,8 @@ def prepend_lines(text, prefix):
     """
     Insert a prefix at the beginning of each line, eg #'
     """
-    return "\n".join([prefix + t for t in text.split("\n")])
+    join_list = [prefix + t if t != '' else t for t in text.split("\n")]
+    return "\n".join(join_list)
 
 unprepend_line = lambda x, p: x[len(p):] if x.startswith(p) else x
 
@@ -62,9 +65,8 @@ def NN_representer(dumper, data):
 
 yaml.add_representer(nbformat.NotebookNode, NN_representer)
 
-
-def read_ipynb(infile, header=None):
-    with open(infile) as f:
+def read_ipynb(infile, header=None, encoding=default_encoding):
+    with open(infile, encoding=encoding) as f:
         node = nbformat.reader.read(f)
 
     # ipynb format 4 is current as of IPython 3.0; update the data structure
@@ -89,10 +91,10 @@ def read_ipynb(infile, header=None):
     return node, header
 
 
-def ipynb_to_rmd(infile, outfile, header=None):
+def ipynb_to_rmd(infile, outfile, header=None, encoding=default_encoding):
     result = []
 
-    node, header = read_ipynb(infile, header)
+    node, header = read_ipynb(infile, header, encoding)
 
     if header is not None:
         # yaml.dump generates "..." as a document end marker instead of the
@@ -117,7 +119,7 @@ def ipynb_to_rmd(infile, outfile, header=None):
 
             result.append(text)
 
-    with open(outfile, "w") as f:
+    with open(outfile, "w", encoding=encoding) as f:
         # separate blocks with blank lines to ensure that code blocks stand
         # alone as paragraphs
         f.write(join_with_emptylines(result))
@@ -125,10 +127,10 @@ def ipynb_to_rmd(infile, outfile, header=None):
     return True
 
 
-def ipynb_to_spin(infile, outfile, header=None):
+def ipynb_to_spin(infile, outfile, header=None, encoding=default_encoding):
     result = []
 
-    node, header = read_ipynb(infile, header)
+    node, header = read_ipynb(infile, header, encoding)
 
     if header is not None:
         # yaml.dump generates "..." as a document end marker instead of the
@@ -148,8 +150,8 @@ def ipynb_to_spin(infile, outfile, header=None):
             else:
                 text = maybe_join(cell.source)
             result.append(text)
-
-    with open(outfile, "w") as f:
+    
+    with open(outfile, "w", encoding=encoding) as f:
         # separate blocks with blank lines to ensure that code blocks stand
         # alone as paragraphs
         # not strictly necessary in this case
@@ -164,11 +166,11 @@ METADATA = dict(kernelspec=dict(display_name="R", language="R", name="ir"),
                                    pygments_lexer="r"))
 
 
-def rmd_to_ipynb(infile, outfile):
+def rmd_to_ipynb(infile, outfile, encoding=default_encoding):
     NN = nbformat.NotebookNode
     node = NN(nbformat=4, nbformat_minor=0, metadata=NN(**METADATA), cells=[])
 
-    with open(infile) as f:
+    with open(infile, encoding=encoding) as f:
         rmdlines = f.readlines()
 
     # YAML front matter appears to be restricted to strictly ---\nYAML\n---
@@ -245,17 +247,17 @@ def rmd_to_ipynb(infile, outfile):
     if state == CODE or celldata:
         add_cell(state, celldata, **meta)
 
-    with open(outfile, "w") as f:
+    with open(outfile, "w", encoding=encoding) as f:
         nbformat.write(node, outfile)
 
     return True
 
 
-def spin_to_ipynb(infile, outfile):
+def spin_to_ipynb(infile, outfile, encoding=default_encoding):
     NN = nbformat.NotebookNode
     node = NN(nbformat=4, nbformat_minor=0, metadata=NN(**METADATA), cells=[])
 
-    with open(infile) as f:
+    with open(infile, encoding=encoding) as f:
         lines = f.readlines()
 
     re_spin = re.compile(r"^#' (.*)$")
@@ -330,7 +332,6 @@ def spin_to_ipynb(infile, outfile):
     if any([c.strip() for c in celldata]):
         add_cell(state, celldata, **meta)
 
-    with open(outfile, "w") as f:
-        nbformat.write(node, outfile)
+    nbformat.write(node, outfile)
 
     return True

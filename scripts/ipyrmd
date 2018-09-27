@@ -1,10 +1,15 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
-from ipyrmd import __version__, ipynb_to_rmd, rmd_to_ipynb, ipynb_to_spin, spin_to_ipynb
+from ipyrmd import __init__, ipynb_to_rmd, rmd_to_ipynb, ipynb_to_spin, spin_to_ipynb
 
 import argparse
 import sys
 import pathlib
+import locale
+
+# Must be UTF8 for ipython direct compatibility. 
+DEFAULT_ENCODING = 'UTF8'
+
 
 parser = argparse.ArgumentParser(description="Convert between IPYNB (IPython/Jupyter Notebook) and RMarkdown")
 parser.add_argument("--to", choices=["ipynb", "Rmd", "R"],
@@ -15,6 +20,8 @@ parser.add_argument("-o", "--out", type=str,
                     help="Output filename (default: input filename with switched extension)")
 parser.add_argument("-y", action="store_true", default=False,
                     help="Overwrite existing output file")
+parser.add_argument('-encode', "--encode", type=str,
+                     default=DEFAULT_ENCODING, help='Specify encoding of input.')
 parser.add_argument("--version", action="store_true", help="Display version and exit")
 parser.add_argument("filename", help="Input filename")
 
@@ -24,6 +31,8 @@ if args.version:
     print("ipyrmd version {0}".format(__version__))
     sys.exit(0)
 
+if args.encode:
+    print('Assuming input file encoded using {}'.format(args.encode))
 
 def guess_from_path(path):
     ext = path.suffix.lower()
@@ -87,7 +96,7 @@ if (src, target) in convert_map:
     print('Converting ({0}->{1}) "{2}" to "{3}"'.format(src, target,
                                                         str(path_in),
                                                         str(path_out)))
-    convert_map[(src, target)](str(path_in), str(path_out))
+    convert_map[(src, target)](str(path_in), str(path_out), None, str(args.encode))
 else:
     print('Conversion from {0} to {1} is not implemented'.format(str(path_in),
                                                                  str(path_out)))
