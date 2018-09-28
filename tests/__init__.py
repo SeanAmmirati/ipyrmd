@@ -4,7 +4,6 @@ import unittest
 import nbformat
 import tempfile
 import ipyrmd
-import locale
 
 NBFORMAT_VERSION = 4
 # generic test classes which start from either an ipynb or rmd source

@@ -17,7 +17,6 @@ TODO:
 import nbformat
 import yaml
 import re
-import locale
 
 # cell.source can be either "source" or ["source", "source"]
 # notebook does not insert implicit newlines in the list case
@@ -28,6 +27,7 @@ maybe_join = lambda x: x if isinstance(x, str) else "".join(x)
 maybe_newline = lambda x, y: x + y if x.endswith("\n") or y.startswith("\n") else x + "\n" + y
 
 default_encoding = 'UTF8'
+
 
 def join_with_emptylines(text):
     """
@@ -51,6 +51,7 @@ def prepend_lines(text, prefix):
     join_list = [prefix + t if t != '' else t for t in text.split("\n")]
     return "\n".join(join_list)
 
+
 unprepend_line = lambda x, p: x[len(p):] if x.startswith(p) else x
 
 
@@ -63,7 +64,9 @@ def NN_representer(dumper, data):
     return dumper.represent_mapping("tag:yaml.org,2002:map", dict(data),
                                     flow_style=False)
 
+
 yaml.add_representer(nbformat.NotebookNode, NN_representer)
+
 
 def read_ipynb(infile, header=None, encoding=default_encoding):
     with open(infile, encoding=encoding) as f:
@@ -158,6 +161,7 @@ def ipynb_to_spin(infile, outfile, header=None, encoding=default_encoding):
         f.write(join_with_emptylines(result))
 
     return True
+
 
 METADATA = dict(kernelspec=dict(display_name="R", language="R", name="ir"),
                 language_info=dict(name="R", file_extension=".r",

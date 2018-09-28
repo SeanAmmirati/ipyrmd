@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from ipyrmd import __init__, ipynb_to_rmd, rmd_to_ipynb, ipynb_to_spin, spin_to_ipynb
+from ipyrmd import __version__, ipynb_to_rmd, rmd_to_ipynb, ipynb_to_spin, spin_to_ipynb
 
 import argparse
 import sys
 import pathlib
-import locale
 
 # Must be UTF8 for ipython direct compatibility. 
 DEFAULT_ENCODING = 'UTF8'
@@ -31,7 +30,7 @@ if args.version:
     print("ipyrmd version {0}".format(__version__))
     sys.exit(0)
 
-if args.encode:
+if args.encode != DEFAULT_ENCODING:
     print('Assuming input file encoded using {}'.format(args.encode))
 
 def guess_from_path(path):
